@@ -1,41 +1,73 @@
 import sqlite3
 
-conn = sqlite3.connect('first_db.sqlite')  # connect or create new if doesn't exist
-# conn.row_factory = sqlite3.Row
+db = 'first_db.sqlite'
 
-conn.execute('CREATE TABLE IF NOT EXISTS products (id int, name text)')
 
-conn.execute('INSERT INTO products values (1000, "hat")')  # add products
-conn.execute('INSERT INTO products values (1001, "jacket")')
+def create_table():
+    with sqlite3.connect(db) as conn:  # context manager auto-commits if no errors in code, otherwise
+        # rolls back all code within context manager block
+        conn.execute('CREATE TABLE IF NOT EXISTS products (id int, name text)')
+    conn.close()
 
-conn.commit()  # save changes, nothing finalized until committed
 
-results = conn.execute('SELECT * FROM products')
+def insert_example_data():
+    with sqlite3.connect(db) as conn:
+        conn.execute('INSERT INTO products values (1000, "hat")')  # add products
+        conn.execute('INSERT INTO products values (1001, "jacket")')
+    conn.close()
 
-all_rows = results.fetchall()
-print(all_rows)
 
-for row in results:
-    print(row[1])  # each row is a tuple, row object
-    # print(row['name'])
+def display_all_data():
+    conn = sqlite3.connect(db)
+    results = conn.execute('SELECT * FROM products')
+    print('All products: ')
+    for row in results:
+        print(row)  # each row is a tuple
 
-results = conn.execute('SELECT * FROM products WHERE name like "jacket"')
-first_row = results.fetchone()
-print(first_row)
+    conn.close()
 
-# new_id = int(input('enter new id: '))
-# new_name = input('enter new product: ')
-#
-# conn.execute(f'INSERT INTO products VALUES(?, ?)', (new_id, new_name))
-# conn.commit()
 
-updated_product = 'wool hat'
-update_id = 1000
-conn.execute('UPDATE products SET name = ? WHERE id = ? ', (updated_product, update_id))
-conn.commit()
+def display_one_product(product_name):
+    conn = sqlite3.connect(db)
+    results = conn.execute('SELECT * FROM products WHERE name like ?', (product_name, ))
+    first_row = results.fetchone()
+    if first_row:
+        print('Your product is: ', first_row)  # upgrade to row factory later?
+    else:
+        print('Not found')
 
-delete_product = 'jacket'
-conn.execute('DELETE from PRODUCTS WHERE name = ?', (delete_product, ))
-conn.commit()
 
-conn.close()
+def create_new_product():
+    new_id = int(input('enter new id: '))
+    new_name = input('enter new product: ')
+
+    with sqlite3.connect(db) as conn:
+        conn.execute(f'INSERT INTO products VALUES(?, ?)', (new_id, new_name))
+
+    conn.close()
+
+
+def update_product():
+    updated_product = 'wool hat'
+    update_id = 1000
+
+    with sqlite3.connect(db) as conn:
+        conn.execute('UPDATE products SET name = ? WHERE id = ? ', (updated_product, update_id))
+
+    conn.close()
+
+
+def delete_product(product_name):
+    with sqlite3.connect(db) as conn:
+        conn.execute('DELETE from PRODUCTS WHERE name = ?', (product_name, ))
+    conn.close()
+
+
+create_table()
+insert_example_data()
+display_all_data()
+display_one_product('jacket')
+display_one_product('coat')
+create_new_product()
+update_product()
+delete_product('jacket')
