@@ -42,7 +42,10 @@ def main():
         vehicle = input('Enter vehicle name or enter to quit: ')
         if not vehicle:
             break
-        miles = float(input(f'Enter new miles for {vehicle}: ')) ## TODO input validation
+        while True:
+            miles = float(input(f'Enter new miles for {vehicle}: '))  # input validation added
+            if miles > 0.0:
+                break
 
         add_miles(vehicle, miles)
 
